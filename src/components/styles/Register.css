@@ -1,0 +1,88 @@
+@font-face {
+    src: url(../../vendor/fonts/fonts.css) format('woff');
+
+}
+
+.register {
+    color: white;
+    display: flex;
+    font-family: 'Inter', Arial, sans-serif;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.register__title {
+    margin: 60px auto 0;
+    padding: 0 0 50px;
+    font-size: 24px;
+    font-weight: 900;
+    width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 1);
+
+}
+
+.register__form {
+
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+}
+
+.register__input {
+    margin: 0 auto;
+    padding: 0;
+    width: 358px;
+    min-height: 27px;
+    font-size: 14px;
+    font-weight: 400;
+    text-align: start;
+    box-sizing: border-box;
+    border-bottom: 2px solid rgba(204, 204, 204, 1);
+    border-top-style: none;
+    border-left-style: none;
+    border-right-style: none;
+    display: inline-block;
+    background-color: black;
+    color: white;
+}
+
+.register__input:last-of-type {
+    margin: 30px auto 216px;
+}
+
+.register__btn {
+    /*margin: 45px 0 0;*/
+    margin: 0 auto;
+    padding: 0;
+    width: 358px;
+    min-height: 46px;
+    background-color: rgba(255, 255, 255, 1);
+    color: black;
+    border-radius: 2px;
+    font-size: 18px;
+    font-weight: 400;
+    cursor: pointer;
+    border-style: none;
+    transition: opacity 0.5s linear;
+}
+
+.register__btn:hover {
+    opacity: 0.8;
+}
+
+.register__btn:disabled {
+    background-color: #FFFFFF;
+    opacity: 0.2;
+    color: black;
+    cursor: not-allowed;
+    border: 1px solid black;
+}
+
+.register__signin {
+    font-size: 14px;
+    font-weight: 400;
+    margin: 15px auto 0;
+    padding: 0;
+}
