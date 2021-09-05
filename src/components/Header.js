@@ -11,9 +11,9 @@ function Header(props) {
                 <Route path={'/signup'}><Link to="/signin" className="header__link">Войти</Link></Route>
                 <Route path={'/signin'}><Link to="/signup" className="header__link">Регистрация</Link></Route>
                 <Route path={'/'}>
-                    <div className={'header__logged'}>
-                        <p className={'header__email'}>{email}</p>
-                        <Link to="/signin" className="header__link">Выйти</Link>
+                    <div className="header__logged">
+                        <p className="header__email">{email}</p>
+                        <Link onClick={props.onSignOut} to="/signin" className="header__link">Выйти</Link>
                     </div>
                 </Route>
 

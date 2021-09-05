@@ -25,13 +25,18 @@ class Login extends React.Component {
     handleSubmit(e) {
         e.preventDefault();
         if (!this.state.password || !this.state.email) {
+
             return;
         }
         auth.authorize(this.state.password, this.state.email)
             .then((data) => {
-                if (data) {
-                    this.setState({ password: '', email: ''}, () => {
-                        this.props.handleLogin();
+                if (data.token) {
+                    this.props.onLogin(data.token);
+                    this.setState({
+                        password: '',
+                        email: ''
+                    }, () => {
+                        this.props.handleLogin(e);
                         this.props.history.push('/');
                     });
                 }
@@ -45,7 +50,7 @@ class Login extends React.Component {
                 <p className="login__title">
                     Вход
                 </p>
-                <form onSubmit={this.handleSubmit} className="login__form">
+                <form  onSubmit={this.handleSubmit} className="login__form">
                     <input onChange={this.handleChange} value={this.state.email} id="email" type="email" name="email"
                            placeholder="Email"
                            className="login__input login__input_type_email"
@@ -58,7 +63,7 @@ class Login extends React.Component {
                            className="login__input login__input_password"
                            minLength="8" maxLength="200" required/>
 
-                    <button type="submit" className="login__btn">Войти</button>
+                    <button  type="submit" className="login__btn">Войти</button>
                 </form>
 
             </div>

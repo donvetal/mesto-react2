@@ -9,11 +9,12 @@ import {CurrentUserContext} from "../contexts/CurrentUserContext";
 import EditProfilePopup from "./EditProfilePopup";
 import EditAvatarPopup from "./EditAvatarPopup";
 import AddPlacePopup from "./AddPlacePopup";
-import {Route, Switch, withRouter} from "react-router-dom";
+import {Redirect, Route, Switch, withRouter} from "react-router-dom";
 import Login from "./Login";
 import Register from "./Register";
 import InfoTooltip from "./InfoTooltip";
 import ProtectedRoute from "./ProtectedRoute";
+import successImg from '../images/info-tooltip-success.svg';
 import * as auth from '../auth.js';
 
 
@@ -25,44 +26,52 @@ function App(props) {
     const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = React.useState(false);
 
     const [isInfoTooltipOpen, setIsInfoTooltipOpen] = React.useState(false);
-    const [userData, setUserData] = React.useState({});
-    const handleLogin = () => {
+    const [email, setEmail] = React.useState({});
+
+    const handleLogin = (e) => {
+        e.preventDefault();
         setLoggedIn(true);
     };
+
     useEffect(() => {
         handleTokenCheck();
     }, []);
 
+    const onLogin = (token) => {
+        localStorage.setItem('token', token);
+    };
+    const onSignOut = () => {
+        localStorage.removeItem('token');
+    };
+
+
     const handleTokenCheck = () => {
-            // если у пользователя есть токен в localStorage,
-            // эта функция проверит валидность токена
-            const token = localStorage.getItem('token');
+        if (localStorage.getItem('token')) {
+            const jwt = localStorage.getItem('token');
+            // проверяем токен пользователя
+            auth.getContent(jwt)
+                .then((res) => {
+                    // найдём выбранное пользователем количество калорий
+                    // из списка возможных целей
+                    if (res) {
+                        setEmail({email: res.data.email});
+                        // если есть цель, добавляем её в стейт
+                        setLoggedIn(true);
 
-            console.log('<<<<<<<>>>', token);
-            if (token) {
-                // проверим токен
-                auth.checkToken(token).then((res) => {
-                        if (res) {
-                            console.log('!!!!', res);
-                            setUserData({
-                                email: res.email
-                            });
-                            console.log(userData);
-                            // авторизуем пользователя
-                            setLoggedIn(true);
-
-
-                            // обернём App.js в withRouter
-                            // так, что теперь есть доступ к этому методу
-                            props.history.push("/");
-
-
-                        }
                     }
-                );
-            }
+
+                })
+                .then(() => {
+                    props.history.push("/");
+
+                });
+
         }
-    ;
+    };
+
+    const handleRegistrationClick = () => {
+        setIsInfoTooltipOpen(true);
+    };
 
 
     const handleEditProfileClick = () => {
@@ -71,6 +80,7 @@ function App(props) {
     const handleAddPlaceClick = () => {
         setIsAddPlacePopupOpen(true);
     };
+
     const handleEditAvatarClick = () => {
         setIsEditAvatarPopupOpen(true);
     };
@@ -173,112 +183,87 @@ function App(props) {
             });
     }
 
+
     return (
         <div className="App">
             <CurrentUserContext.Provider value={currentUser}>
                 <div className="page">
-
-                    <Header userData={userData}/>
+                    <Header onSignOut={onSignOut} userData={email}/>
                     <Switch>
                         <Route path="/signin">
-                            <Login handleLogin={handleLogin}/>
+                            <Login handleLogin={handleLogin} onLogin={onLogin}/>
+                        </Route>
+                        <Route path="/signup">
+                            <Register
+                                onRegister={handleRegistrationClick}/>
                             <InfoTooltip
                                 isOpen={isInfoTooltipOpen}
                                 onClose={closeAllPopups}
+                                image={successImg}
+                                title={'Вы успешно зарегестрировались!'}
+
                             />
                         </Route>
-                        <Route path="/signup">
-                            <Register/>
+
+                        <Route>
+                            {loggedIn ? (<Redirect to="/"/>) : (<Redirect to="/signin"/>)}
+
+                            <ProtectedRoute exact path="/"
+                                            loggedIn={loggedIn}
+                                            component={Main}
+                                            onEditProfile={handleEditProfileClick}
+                                            onAddPlace={handleAddPlaceClick}
+                                            onEditAvatar={handleEditAvatarClick}
+                                            cards={cards}
+                                            handleCardClick={handleCardClick}
+                                            setCards={setCards}
+                                            onCardLike={handleCardLike}
+                                            onCardDelete={handleCardDelete}
+
+                            />
+                            <ProtectedRoute exact path="/"
+                                            loggedIn={loggedIn}
+                                            component={Footer}
+                            />
+                            <ProtectedRoute exact path="/"
+                                            loggedIn={loggedIn}
+                                            component={EditProfilePopup}
+                                            isOpen={isEditProfilePopupOpen}
+                                            onUpdateUser={handleUpdateUser}
+                                            onClose={closeAllPopups}
+                            />
+                            <ProtectedRoute exact path="/"
+                                            loggedIn={loggedIn}
+                                            component={AddPlacePopup}
+                                            isOpen={isAddPlacePopupOpen}
+                                            onAddPlaceSubmit={handleAddPlace}
+                                            onClose={closeAllPopups}
+                            />
+                            <ProtectedRoute exact path="/"
+                                            loggedIn={loggedIn}
+                                            component={EditAvatarPopup}
+                                            isOpen={isEditAvatarPopupOpen}
+                                            onUpdateAvatar={handleUpdateAvatar}
+                                            onClose={closeAllPopups}
+                            />
+                            <ProtectedRoute exact path="/"
+                                            loggedIn={loggedIn}
+                                            component={PopupWithForm}
+                                            name="delete-image"
+                                            title="Вы уверены?"
+                                            buttonName="Да"
+
+                            />
+                            <ProtectedRoute exact path="/"
+                                            loggedIn={loggedIn}
+                                            component={ImagePopup}
+                                            card={selectedCard}
+                                            onClose={closeAllPopups}
+                                            isOpen={isImagePopupOpen}
+                            />
+
                         </Route>
 
-                        <ProtectedRoute path="/"
-                                        loggedIn={loggedIn}
-                                        component={Main}
-                                        onEditProfile={handleEditProfileClick}
-                                        onAddPlace={handleAddPlaceClick}
-                                        onEditAvatar={handleEditAvatarClick}
-                                        cards={cards}
-                                        handleCardClick={handleCardClick}
-                                        setCards={setCards}
-                                        onCardLike={handleCardLike}
-                                        onCardDelete={handleCardDelete}
-                        />
-                        <ProtectedRoute path="/"
-                                        loggedIn={loggedIn}
-                                        component={Footer}
-                        />
-                        <ProtectedRoute path="/"
-                                        loggedIn={loggedIn}
-                                        component={EditProfilePopup}
-                                        isOpen={isEditProfilePopupOpen}
-                                        onUpdateUser={handleUpdateUser}
-                                        onClose={closeAllPopups}
-                        />
-                        <ProtectedRoute path="/"
-                                        loggedIn={loggedIn}
-                                        component={AddPlacePopup}
-                                        isOpen={isAddPlacePopupOpen}
-                                        onAddPlaceSubmit={handleAddPlace}
-                                        onClose={closeAllPopups}
-                        />
-                        <ProtectedRoute path="/"
-                                        loggedIn={loggedIn}
-                                        component={EditAvatarPopup}
-                                        isOpen={isEditAvatarPopupOpen}
-                                        onUpdateAvatar={handleUpdateAvatar}
-                                        onClose={closeAllPopups}
-                        />
-                        <ProtectedRoute path="/"
-                                        loggedIn={loggedIn}
-                                        component={PopupWithForm}
-                                        name="delete-image"
-                                        title="Вы уверены?"
-                                        buttonName="Да"
-
-                        />
-                        <ProtectedRoute path="/"
-                                        loggedIn={loggedIn}
-                                        component={ImagePopup}
-                                        card={selectedCard}
-                                        onClose={closeAllPopups}
-                                        isOpen={isImagePopupOpen}
-                        />
-
-
-                        {/*<Route path='/'>*/}
-                        {/*<Main onEditProfile={handleEditProfileClick}*/}
-                        {/*      onAddPlace={handleAddPlaceClick}*/}
-                        {/*      onEditAvatar={handleEditAvatarClick}*/}
-                        {/*      cards={cards}*/}
-                        {/*      handleCardClick={handleCardClick}*/}
-                        {/*      setCards={setCards}*/}
-                        {/*      onCardLike={handleCardLike}*/}
-                        {/*      onCardDelete={handleCardDelete}*/}
-                        {/*>*/}
-                        {/*</Main>*/}
-
-                        {/*<Footer/>*/}
-
-                        {/*<EditProfilePopup isOpen={isEditProfilePopupOpen}*/}
-                        {/*                  onUpdateUser={handleUpdateUser}*/}
-                        {/*                  onClose={closeAllPopups}/>*/}
-
-                        {/*<AddPlacePopup isOpen={isAddPlacePopupOpen}*/}
-                        {/*               onAddPlaceSubmit={handleAddPlace}*/}
-                        {/*               onClose={closeAllPopups}/>*/}
-
-                        {/*<EditAvatarPopup isOpen={isEditAvatarPopupOpen}*/}
-                        {/*                 onUpdateAvatar={handleUpdateAvatar}*/}
-                        {/*                 onClose={closeAllPopups}/>*/}
-
-                        {/*<PopupWithForm name="delete-image" title="Вы уверены?" buttonName="Да"/>*/}
-
-                        {/*<ImagePopup*/}
-                        {/*    card={selectedCard}*/}
-                        {/*    onClose={closeAllPopups}*/}
-                        {/*    isOpen={isImagePopupOpen}*/}
-                        {/*/>*/}
-                        {/*</Route>*/}
                     </Switch>
                 </div>
             </CurrentUserContext.Provider>

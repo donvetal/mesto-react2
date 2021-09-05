@@ -22,25 +22,19 @@ class Register extends React.Component {
     };
 
     handleSubmit = (e) => {
+
         e.preventDefault();
-        console.log(this.state.password);
-        console.log(this.state.email);
-        // const{password, email} = this.state;
         auth.register(this.state.password, this.state.email)
             .then((res) => {
-                console.log('>>>>', res)
-                if (res) {
-                    this.setState({
-                        message: ''
-                    }, () => {
-                        this.props.history.push('/singin');
-                    });
-                } else {
-                    this.setState({
-                        message: 'Что-то пошло не так!'
-                    });
+
+
+                if (res.statusCode !== 400) {
+
+                    this.props.history.push('/signin');
                 }
             });
+        this.props.onRegister();
+
     };
 
     render() {
@@ -49,7 +43,7 @@ class Register extends React.Component {
                 <p className="register__title">
                     Регистрация
                 </p>
-                <form  className="register__form">
+                <form onSubmit={this.handleSubmit} className="register__form">
 
                     <input onChange={this.handleChange} value={this.state.email} id="email" type="email" name="email"
                            placeholder="Email"
@@ -65,7 +59,7 @@ class Register extends React.Component {
                            minLength="8" maxLength="200" required/>
 
 
-                    <button type="submit" onSubmit={this.handleSubmit}
+                    <button type="submit"
                             className="register__btn">Зарегистрироваться
                     </button>
                     <p className="register__signin">Уже зарегистрированы? Войти</p>
