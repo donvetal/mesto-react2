@@ -30,18 +30,23 @@ class Login extends React.Component {
         }
         auth.authorize(this.state.password, this.state.email)
             .then((data) => {
-                if (data.token) {
+                if (data.hasOwnProperty('token')) {
                     this.props.onLogin(data.token);
                     this.setState({
                         password: '',
                         email: ''
                     }, () => {
-                        this.props.handleLogin(e);
+                        this.props.handleLogin(true);
                         this.props.history.push('/');
                     });
+                } else {
+                    this.props.handleLogin(false);
                 }
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                this.props.handleLogin(false);
+                console.log(err);
+            });
     }
 
     render() {

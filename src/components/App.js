@@ -14,12 +14,14 @@ import Login from "./Login";
 import Register from "./Register";
 import InfoTooltip from "./InfoTooltip";
 import ProtectedRoute from "./ProtectedRoute";
+import fail from '../images/info-tooltip-fail.svg';
 import successImg from '../images/info-tooltip-success.svg';
 import * as auth from '../auth.js';
 
 
 function App(props) {
     const [loggedIn, setLoggedIn] = React.useState(false);
+    const [registerIn, setRegisterIn] = React.useState(false);
 
     const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(false);
     const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = React.useState(false);
@@ -28,9 +30,19 @@ function App(props) {
     const [isInfoTooltipOpen, setIsInfoTooltipOpen] = React.useState(false);
     const [email, setEmail] = React.useState({});
 
-    const handleLogin = (e) => {
-        e.preventDefault();
-        setLoggedIn(true);
+    const handleLogin = (status) => {
+        if (status) {
+            handleTokenCheck();
+        } else {
+            setIsInfoTooltipOpen(true);
+        }
+
+    };
+
+    const handleRegister = (status) => {
+        setIsInfoTooltipOpen(true);
+        setRegisterIn(status);
+
     };
 
     useEffect(() => {
@@ -42,6 +54,7 @@ function App(props) {
     };
     const onSignOut = () => {
         localStorage.removeItem('token');
+        setRegisterIn(false);
     };
 
 
@@ -69,10 +82,6 @@ function App(props) {
         }
     };
 
-    const handleRegistrationClick = () => {
-        setIsInfoTooltipOpen(true);
-    };
-
 
     const handleEditProfileClick = () => {
         setIsEditProfilePopupOpen(true);
@@ -84,6 +93,17 @@ function App(props) {
     const handleEditAvatarClick = () => {
         setIsEditAvatarPopupOpen(true);
     };
+
+
+    const onInfoTooltipClose = () => {
+
+        if (registerIn) {
+            props.history.push("/signin");
+        }
+
+        closeAllPopups();
+    };
+
     const closeAllPopups = () => {
         setIsEditProfilePopupOpen(false);
         setIsAddPlacePopupOpen(false);
@@ -183,7 +203,6 @@ function App(props) {
             });
     }
 
-
     return (
         <div className="App">
             <CurrentUserContext.Provider value={currentUser}>
@@ -191,18 +210,28 @@ function App(props) {
                     <Header onSignOut={onSignOut} userData={email}/>
                     <Switch>
                         <Route path="/signin">
-                            <Login handleLogin={handleLogin} onLogin={onLogin}/>
-                        </Route>
-                        <Route path="/signup">
-                            <Register
-                                onRegister={handleRegistrationClick}/>
+
                             <InfoTooltip
                                 isOpen={isInfoTooltipOpen}
                                 onClose={closeAllPopups}
-                                image={successImg}
-                                title={'Вы успешно зарегестрировались!'}
+                                image={fail}
+                                title={'Что-то пошло не так! Попробуйте ещё раз.'}
 
                             />
+                            <Login handleLogin={handleLogin} onLogin={onLogin}/>
+                        </Route>
+                        <Route path="/signup">
+
+                            <InfoTooltip
+                                isOpen={isInfoTooltipOpen}
+                                onClose={onInfoTooltipClose}
+                                image={registerIn ? successImg : fail}
+                                title={registerIn ? 'Вы успешно зарегестрировались!' : 'Что-то пошло не так! Попробуйте ещё раз.'}
+
+                            />
+                            <Register
+                                onRegister={handleRegister}/>
+
                         </Route>
 
                         <Route>

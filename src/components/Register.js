@@ -26,14 +26,13 @@ class Register extends React.Component {
         e.preventDefault();
         auth.register(this.state.password, this.state.email)
             .then((res) => {
-
-
-                if (res.statusCode !== 400) {
-
-                    this.props.history.push('/signin');
+                if (res.hasOwnProperty('error')) {
+                    this.props.onRegister(false);
+                } else {
+                    this.props.onRegister(true);
                 }
             });
-        this.props.onRegister();
+
 
     };
 
