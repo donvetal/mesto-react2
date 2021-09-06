@@ -21,7 +21,7 @@ import * as auth from '../utils/auth.js';
 
 function App(props) {
     const [loggedIn, setLoggedIn] = React.useState(false);
-    const [registerIn, setRegisterIn] = React.useState(false);
+    const [registered, setRegistered] = React.useState(false);
 
     const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = React.useState(false);
     const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = React.useState(false);
@@ -30,37 +30,25 @@ function App(props) {
     const [isInfoTooltipOpen, setIsInfoTooltipOpen] = React.useState(false);
     const [email, setEmail] = React.useState({});
 
-    const handleLogin = (res) => {
-        if (res.status) {
-            setEmail({email: res.email});
-            setLoggedIn(true);
-            props.history.push("/");
-
-        } else {
-            setIsInfoTooltipOpen(true);
-        }
-
+    const onSignOut = () => {
+        localStorage.removeItem('token');
+        setRegistered(false);
     };
-    const handleLoginUser = (password, email) => {
+
+    const onLogin = (password, email) => {
         auth.authorize(password, email)
             .then((data) => {
                 if (data && data.hasOwnProperty('token')) {
-                    onLogin(data.token);
-                    handleLogin({
-                        "email": email,
-                        status: true
-                    });
-                    props.history.push('/');
+                    localStorage.setItem('token', data.token);
+                    setEmail({email: email});
+                    setLoggedIn(true);
+                    props.history.push("/");
                 } else {
-                    handleLogin({
-                        status: false
-                    });
+                    setIsInfoTooltipOpen(true);
                 }
             })
             .catch(err => {
-                handleLogin({
-                    status: false
-                });
+                setIsInfoTooltipOpen(true);
                 console.log(err);
             });
     };
@@ -81,18 +69,16 @@ function App(props) {
                 .then(() => {
                     props.history.push("/");
 
+                })
+                .catch(error => {
+                    console.log(error);
                 });
 
         }
     }, [props.history]);
 
-    const onLogin = (token) => {
-        localStorage.setItem('token', token);
-    };
-    const onSignOut = () => {
-        localStorage.removeItem('token');
-        setRegisterIn(false);
-    };
+
+
 
     const handleEditProfileClick = () => {
         setIsEditProfilePopupOpen(true);
@@ -108,7 +94,7 @@ function App(props) {
 
     const onInfoTooltipClose = () => {
         closeAllPopups();
-        if (registerIn) {
+        if (registered) {
             setTimeout(() => props.history.push("/signin"), 1000);
         }
 
@@ -159,9 +145,9 @@ function App(props) {
         auth.register(password, email)
             .then((res) => {
                 if (res.hasOwnProperty('error')) {
-                    setRegisterIn(false);
+                    setRegistered(false);
                 } else {
-                    setRegisterIn(true);
+                    setRegistered(true);
                 }
                 setIsInfoTooltipOpen(true);
             })
@@ -241,15 +227,15 @@ function App(props) {
                                 title={'Что-то пошло не так! Попробуйте ещё раз.'}
 
                             />
-                            <Login handleLogin={handleLoginUser}/>
+                            <Login handleLogin={onLogin}/>
                         </Route>
                         <Route path="/signup">
 
                             <InfoTooltip
                                 isOpen={isInfoTooltipOpen}
                                 onClose={onInfoTooltipClose}
-                                image={registerIn ? successImg : fail}
-                                title={registerIn ? 'Вы успешно зарегестрировались!' : 'Что-то пошло не так! Попробуйте ещё раз.'}
+                                image={registered ? successImg : fail}
+                                title={registered ? 'Вы успешно зарегестрировались!' : 'Что-то пошло не так! Попробуйте ещё раз.'}
 
                             />
                             <Register
