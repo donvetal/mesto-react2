@@ -16,7 +16,7 @@ import InfoTooltip from "./InfoTooltip";
 import ProtectedRoute from "./ProtectedRoute";
 import fail from '../images/info-tooltip-fail.svg';
 import successImg from '../images/info-tooltip-success.svg';
-import * as auth from '../auth.js';
+import * as auth from '../utils/auth.js';
 
 
 function App(props) {
@@ -30,47 +30,51 @@ function App(props) {
     const [isInfoTooltipOpen, setIsInfoTooltipOpen] = React.useState(false);
     const [email, setEmail] = React.useState({});
 
-    const handleLogin = (status) => {
-        if (status) {
-            handleTokenCheck();
+    const handleLogin = (res) => {
+        if (res.status) {
+            setEmail({email: res.email});
+            setLoggedIn(true);
+            props.history.push("/");
+
         } else {
             setIsInfoTooltipOpen(true);
         }
 
     };
-
-    const handleRegister = (status) => {
-        setIsInfoTooltipOpen(true);
-        setRegisterIn(status);
-
+    const handleLoginUser = (password, email) => {
+        auth.authorize(password, email)
+            .then((data) => {
+                if (data && data.hasOwnProperty('token')) {
+                    onLogin(data.token);
+                    handleLogin({
+                        "email": email,
+                        status: true
+                    });
+                    props.history.push('/');
+                } else {
+                    handleLogin({
+                        status: false
+                    });
+                }
+            })
+            .catch(err => {
+                handleLogin({
+                    status: false
+                });
+                console.log(err);
+            });
     };
+
 
     useEffect(() => {
-        handleTokenCheck();
-    }, []);
-
-    const onLogin = (token) => {
-        localStorage.setItem('token', token);
-    };
-    const onSignOut = () => {
-        localStorage.removeItem('token');
-        setRegisterIn(false);
-    };
-
-
-    const handleTokenCheck = () => {
         if (localStorage.getItem('token')) {
             const jwt = localStorage.getItem('token');
             // проверяем токен пользователя
-            auth.getContent(jwt)
+            auth.checkToken(jwt)
                 .then((res) => {
-                    // найдём выбранное пользователем количество калорий
-                    // из списка возможных целей
                     if (res) {
                         setEmail({email: res.data.email});
-                        // если есть цель, добавляем её в стейт
                         setLoggedIn(true);
-
                     }
 
                 })
@@ -80,8 +84,15 @@ function App(props) {
                 });
 
         }
-    };
+    }, [props.history]);
 
+    const onLogin = (token) => {
+        localStorage.setItem('token', token);
+    };
+    const onSignOut = () => {
+        localStorage.removeItem('token');
+        setRegisterIn(false);
+    };
 
     const handleEditProfileClick = () => {
         setIsEditProfilePopupOpen(true);
@@ -96,20 +107,19 @@ function App(props) {
 
 
     const onInfoTooltipClose = () => {
-
+        closeAllPopups();
         if (registerIn) {
-            props.history.push("/signin");
+            setTimeout(() => props.history.push("/signin"), 1000);
         }
 
-        closeAllPopups();
     };
 
     const closeAllPopups = () => {
+        setIsInfoTooltipOpen(false);
         setIsEditProfilePopupOpen(false);
         setIsAddPlacePopupOpen(false);
         setIsEditAvatarPopupOpen(false);
         setIsImagePopupOpen(false);
-        setIsInfoTooltipOpen(false);
     };
 
     const handleCardClick = (card) => {
@@ -144,6 +154,19 @@ function App(props) {
             });
     }, []);
 
+    const handleRegister = (password, email) => {
+
+        auth.register(password, email)
+            .then((res) => {
+                if (res.hasOwnProperty('error')) {
+                    setRegisterIn(false);
+                } else {
+                    setRegisterIn(true);
+                }
+                setIsInfoTooltipOpen(true);
+            })
+            .catch((err) => console.log(err));
+    };
 
     const handleUpdateUser = (currentUser) => {
         api.setUserInfo(currentUser.name, currentUser.about)
@@ -218,7 +241,7 @@ function App(props) {
                                 title={'Что-то пошло не так! Попробуйте ещё раз.'}
 
                             />
-                            <Login handleLogin={handleLogin} onLogin={onLogin}/>
+                            <Login handleLogin={handleLoginUser}/>
                         </Route>
                         <Route path="/signup">
 
@@ -235,7 +258,7 @@ function App(props) {
                         </Route>
 
                         <Route>
-                            {loggedIn ? (<Redirect to="/"/>) : (<Redirect to="/signin"/>)}
+
 
                             <ProtectedRoute exact path="/"
                                             loggedIn={loggedIn}
@@ -250,50 +273,32 @@ function App(props) {
                                             onCardDelete={handleCardDelete}
 
                             />
-                            <ProtectedRoute exact path="/"
-                                            loggedIn={loggedIn}
-                                            component={Footer}
-                            />
-                            <ProtectedRoute exact path="/"
-                                            loggedIn={loggedIn}
-                                            component={EditProfilePopup}
-                                            isOpen={isEditProfilePopupOpen}
-                                            onUpdateUser={handleUpdateUser}
-                                            onClose={closeAllPopups}
-                            />
-                            <ProtectedRoute exact path="/"
-                                            loggedIn={loggedIn}
-                                            component={AddPlacePopup}
-                                            isOpen={isAddPlacePopupOpen}
-                                            onAddPlaceSubmit={handleAddPlace}
-                                            onClose={closeAllPopups}
-                            />
-                            <ProtectedRoute exact path="/"
-                                            loggedIn={loggedIn}
-                                            component={EditAvatarPopup}
-                                            isOpen={isEditAvatarPopupOpen}
-                                            onUpdateAvatar={handleUpdateAvatar}
-                                            onClose={closeAllPopups}
-                            />
-                            <ProtectedRoute exact path="/"
-                                            loggedIn={loggedIn}
-                                            component={PopupWithForm}
-                                            name="delete-image"
-                                            title="Вы уверены?"
-                                            buttonName="Да"
-
-                            />
-                            <ProtectedRoute exact path="/"
-                                            loggedIn={loggedIn}
-                                            component={ImagePopup}
-                                            card={selectedCard}
-                                            onClose={closeAllPopups}
-                                            isOpen={isImagePopupOpen}
-                            />
-
+                            {loggedIn ? (<Redirect to="/"/>) : (<Redirect to="/signin"/>)}
                         </Route>
 
+
                     </Switch>
+                    <Footer/>
+
+                    <EditProfilePopup isOpen={isEditProfilePopupOpen}
+                                      onUpdateUser={handleUpdateUser}
+                                      onClose={closeAllPopups}/>
+
+                    <AddPlacePopup isOpen={isAddPlacePopupOpen}
+                                   onAddPlaceSubmit={handleAddPlace}
+                                   onClose={closeAllPopups}/>
+
+                    <EditAvatarPopup isOpen={isEditAvatarPopupOpen}
+                                     onUpdateAvatar={handleUpdateAvatar}
+                                     onClose={closeAllPopups}/>
+
+                    <PopupWithForm name="delete-image" title="Вы уверены?" buttonName="Да"/>
+
+                    <ImagePopup
+                        card={selectedCard}
+                        onClose={closeAllPopups}
+                        isOpen={isImagePopupOpen}
+                    />
                 </div>
             </CurrentUserContext.Provider>
         </div>

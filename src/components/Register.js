@@ -1,7 +1,5 @@
 import React from 'react';
-import {withRouter} from 'react-router-dom';
-import * as auth from '../auth.js';
-import './styles/Register.css';
+import {Link, withRouter} from 'react-router-dom';
 
 class Register extends React.Component {
     constructor(props) {
@@ -24,15 +22,7 @@ class Register extends React.Component {
     handleSubmit = (e) => {
 
         e.preventDefault();
-        auth.register(this.state.password, this.state.email)
-            .then((res) => {
-                if (res.hasOwnProperty('error')) {
-                    this.props.onRegister(false);
-                } else {
-                    this.props.onRegister(true);
-                }
-            });
-
+        this.props.onRegister(this.state.password, this.state.email);
 
     };
 
@@ -61,7 +51,9 @@ class Register extends React.Component {
                     <button type="submit"
                             className="register__btn">Зарегистрироваться
                     </button>
-                    <p className="register__signin">Уже зарегистрированы? Войти</p>
+                    <p className="register__signin">Уже зарегистрированы?
+                        <Link to="/signin" className="register__signin-link"> Войти</Link>
+                    </p>
 
                 </form>
 

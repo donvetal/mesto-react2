@@ -1,7 +1,5 @@
 import React from "react";
 import {withRouter} from "react-router-dom";
-import './styles/Login.css';
-import * as auth from '../auth.js';
 
 
 class Login extends React.Component {
@@ -28,25 +26,8 @@ class Login extends React.Component {
 
             return;
         }
-        auth.authorize(this.state.password, this.state.email)
-            .then((data) => {
-                if (data.hasOwnProperty('token')) {
-                    this.props.onLogin(data.token);
-                    this.setState({
-                        password: '',
-                        email: ''
-                    }, () => {
-                        this.props.handleLogin(true);
-                        this.props.history.push('/');
-                    });
-                } else {
-                    this.props.handleLogin(false);
-                }
-            })
-            .catch(err => {
-                this.props.handleLogin(false);
-                console.log(err);
-            });
+        this.props.handleLogin(this.state.password, this.state.email);
+
     }
 
     render() {
@@ -55,7 +36,7 @@ class Login extends React.Component {
                 <p className="login__title">
                     Вход
                 </p>
-                <form  onSubmit={this.handleSubmit} className="login__form">
+                <form onSubmit={this.handleSubmit} className="login__form">
                     <input onChange={this.handleChange} value={this.state.email} id="email" type="email" name="email"
                            placeholder="Email"
                            className="login__input login__input_type_email"
@@ -68,7 +49,7 @@ class Login extends React.Component {
                            className="login__input login__input_password"
                            minLength="8" maxLength="200" required/>
 
-                    <button  type="submit" className="login__btn">Войти</button>
+                    <button type="submit" className="login__btn">Войти</button>
                 </form>
 
             </div>
